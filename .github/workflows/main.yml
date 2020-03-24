@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: CI (Main)
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -46,4 +46,10 @@ jobs:
         shell: pwsh
       - name: Debug Build
         run: |
-          msbuild . /p:Configuration=Debug /p:Platform="Any CPU"
+          msbuild . /p:Configuration=Debug /p:Platform="Any CPU" -m
+
+      - name: Upload Artifact (Debug Binary)
+        uses: actions/upload-artifact@v1
+        with:
+          name: binary-for-debug
+          path: '2048 on PC\bin\Debug'
