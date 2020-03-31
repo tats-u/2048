@@ -16,31 +16,10 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Locate & Exec vcvarsall.bat
-        run: |
-          $VCVarsAll = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find "VC\Auxiliary\Build\vcvarsall.bat"
-          if (-not $VCVarsAll) {
-            Write-Error "vcvarsall.bat not found" -Category NotInstalled
-            exit 1
-          }
-          $Token = "#####ENV#####"
-          $enc = [Console]::OutputEncoding
-          [Console]::OutputEncoding = [Text.Encoding]::Unicode
-          $VCVarsAllResult = cmd /U /C "`"$VCVarsAll`" x64 && echo $TOKEN&& set"
-          [Console]::OutputEncoding = $enc
-          $TokenIndex = $VCVarsAllResult.IndexOf($Token)
-          if ($TokenIndex -eq -1) {
-            Write-Error "vcvarsall failed."
-            exit 1
-          }
-          $VCVarsAllResult | Select-Object -Skip ($TokenIndex + 1) | ForEach-Object {
-            $k, $v = $_ -split "=", 2
-            Write-Output "::set-env name=$k::$v"
-          }
-        shell: pwsh
+      - uses: actions/setup-dotnet@v1
       - name: Release Build
         run: |
-          msbuild . /p:Configuration=Release /p:Platform="Any CPU" -m
+          dotnet build -c Release
         shell: pwsh
       - name: Create release
         id: create_release
@@ -62,6 +41,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_name: "2048 on PC.exe"
-          asset_path: '2048 on PC\bin\Release\2048 on PC.exe'
+          asset_name: "2048_on_PC.exe"
+          asset_path: '2048 on PC\bin\Release\netcoreapp3.0\2048 on PC.exe'
           asset_content_type: application/octet-stream

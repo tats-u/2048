@@ -22,34 +22,13 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Locate & Exec vcvarsall.bat
-        run: |
-          $VCVarsAll = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -find "VC\Auxiliary\Build\vcvarsall.bat"
-          if (-not $VCVarsAll) {
-            Write-Error "vcvarsall.bat not found" -Category NotInstalled
-            exit 1
-          }
-          $Token = "#####ENV#####"
-          $enc = [Console]::OutputEncoding
-          [Console]::OutputEncoding = [Text.Encoding]::Unicode
-          $VCVarsAllResult = cmd /U /C "`"$VCVarsAll`" x64 && echo $TOKEN&& set"
-          [Console]::OutputEncoding = $enc
-          $TokenIndex = $VCVarsAllResult.IndexOf($Token)
-          if ($TokenIndex -eq -1) {
-            Write-Error "vcvarsall failed."
-            exit 1
-          }
-          $VCVarsAllResult | Select-Object -Skip ($TokenIndex + 1) | ForEach-Object {
-            $k, $v = $_ -split "=", 2
-            Write-Output "::set-env name=$k::$v"
-          }
-        shell: pwsh
+      - uses: actions/setup-dotnet@v1
       - name: Debug Build
         run: |
-          msbuild . /p:Configuration=Debug /p:Platform="Any CPU" -m
+          dotnet build
 
       - name: Upload Artifact (Debug Binary)
         uses: actions/upload-artifact@v1
         with:
           name: binary-for-debug
-          path: '2048 on PC\bin\Debug'
+          path: '2048 on PC\bin\Debug\netcoreapp3.0'
